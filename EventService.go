@@ -1,7 +1,7 @@
 package eventbus
 
 type EventService interface {
-	GetChannel() chan interface{}
+	GetChannel() chan Event
 	GetEventType() string
 	Run()
 	Stop()
