@@ -31,30 +31,30 @@ func (s *SNSEventService) Run() {
 		return
 	}
 	var ctx context.Context
-	ctx, s.cancelFunc = context.WithCancel(context.TODO())
-	// TODO: create SNS cilent by aws go sdk v2
+	ctx, s.cancelFunc = context.WithCancel(context.TODO()) // This is for canceling go routine. TODO is enough
+
 	client := s.createSNSClient()
 
-	go func() {
-		topicArn := s.topic
-
-		select {
-		case <-ctx.Done():
-		case event := <-s.GetChannel():
-
-			input := &sns.PublishInput{
-				Message:  event.Data.(*string),
-				TopicArn: &topicArn,
-			}
-
-			_, err := PublishMessage(event.Ctx, client, input) // _ might be useful in some case
-			if err != nil {
-				fmt.Println("Got an error publishing the message:")
-				fmt.Println(err)
+	go func(c context.Context, client SNSPublishAPI, topicArn string) {
+		for {
+			select {
+			case <-ctx.Done():
 				return
+			case event := <-s.GetChannel():
+				input := &sns.PublishInput{
+					Message:  event.Data.(*string),
+					TopicArn: &topicArn,
+				}
+
+				_, err := PublishMessage(event.Ctx, client, input) // _ (result), might be useful in some case
+				if err != nil {
+					fmt.Println("Got an error publishing the message:")
+					fmt.Println(err)
+					return
+				}
 			}
 		}
-	}()
+	}(ctx, client, s.topic)
 }
 
 func (s *SNSEventService) Stop() {

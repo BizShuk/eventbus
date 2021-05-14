@@ -6,7 +6,7 @@ import (
 )
 
 type Dispatcher interface {
-	Publish(ctx context.Context, events ...Event) error
+	Publish(ctx context.Context, events ...*Event) error
 	Registor(EventService) error
 	UnRegistor(eventType string)
 }
@@ -23,20 +23,20 @@ func (e *EventDispatcher) Publish(ctx context.Context, events ...*Event) error {
 		if event == nil || event.EventType == "" {
 			continue
 		}
-		if event.Ctx == nil {
+		if event.Ctx == nil { // inject contetx from service if not exist
 			event.Ctx = ctx
 		}
 		validEvents = append(validEvents, *event)
 	}
 
 	for _, event := range validEvents {
-		e.dispatch(&event)
+		e.dispatch(event)
 	}
 
 	return nil
 }
 
-func (e *EventDispatcher) dispatch(event *Event) {
+func (e *EventDispatcher) dispatch(event Event) {
 	if svc, exist := e.EventChan[event.EventType]; exist {
 		svc.GetChannel() <- event
 	}
