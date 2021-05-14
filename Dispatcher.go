@@ -5,6 +5,7 @@ import (
 	"errors"
 )
 
+// for applicatino mock testing
 type Dispatcher interface {
 	Publish(ctx context.Context, events ...*Event) error
 	Registor(EventService) error
@@ -16,6 +17,7 @@ type EventDispatcher struct {
 }
 
 // Here is gin context come in for X-ray or others
+// make sure context is shallow copy, or extended, otherwise it might have data race issue in certain level
 func (e *EventDispatcher) Publish(ctx context.Context, events ...*Event) error {
 	var validEvents []Event
 
