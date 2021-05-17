@@ -12,9 +12,9 @@ func WithEventType(eventType string) SNSOption {
 	}
 }
 
-func WithMaxChannelBuffer(num int) SNSOption {
+func WithEventChan(ch chan Event) SNSOption {
 	return func(svc *SNSEventService) {
-		svc.ch = make(chan Event, num)
+		svc.ch = ch
 	}
 }
 

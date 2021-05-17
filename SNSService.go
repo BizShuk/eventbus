@@ -69,7 +69,7 @@ const DefaultSNSServiceEventType string = "SNSEvent"
 
 func CreateSNSEventService(options ...SNSOption) (*SNSEventService, error) {
 	svc := &SNSEventService{
-		ch:        make(chan Event),
+		ch:        make(chan Event, 100),
 		eventType: DefaultSNSServiceEventType,
 		client:    http.DefaultClient,
 	}

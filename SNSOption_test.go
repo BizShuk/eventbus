@@ -33,33 +33,33 @@ func TestWithEventType(t *testing.T) {
 	}
 }
 
-func TestWithMaxChannelBuffer(t *testing.T) {
+func TestWithEventChan(t *testing.T) {
 
 	mockSNSService := &SNSEventService{}
+	ch := make(chan Event, 100)
 	type args struct {
-		num int
+		ch chan Event
 	}
 	tests := []struct {
 		name string
 		args args
-		want int
+		want chan Event
 	}{
 		{
-			name: "TestWithMaxChannelBuffer",
-			args: args{num: 100},
-			want: 100,
+			name: "TestWithEventChan",
+			args: args{ch: ch},
+			want: ch,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := WithMaxChannelBuffer(tt.args.num)
-			if got(mockSNSService); !reflect.DeepEqual(cap(mockSNSService.ch), tt.want) {
-				t.Errorf("WithMaxChannelBuffer() = %v, want %v", got, tt.want)
+			got := WithEventChan(tt.args.ch)
+			if got(mockSNSService); !reflect.DeepEqual(mockSNSService.ch, tt.want) {
+				t.Errorf("WithEventChan() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
-
 func TestWithTopicArn(t *testing.T) {
 	mockSNSService := &SNSEventService{}
 	type args struct {

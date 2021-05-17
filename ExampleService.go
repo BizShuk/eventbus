@@ -53,7 +53,7 @@ const DefaultExampleEventType string = "ExampleEvent"
 
 func CreateExampleEventService() (*ExampleEventService, error) {
 	svc := &ExampleEventService{
-		ch:        make(chan Event),
+		ch:        make(chan Event, 100),
 		eventType: DefaultExampleEventType,
 	}
 
