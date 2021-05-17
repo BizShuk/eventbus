@@ -16,7 +16,7 @@ type SNSEventService struct {
 	eventType  string
 	client     *http.Client
 	snsClient  SNSPublishAPI
-	topic      string // AWS ARN
+	topic      string // AWS SNS arn
 	cancelFunc context.CancelFunc
 }
 
