@@ -2,7 +2,9 @@ package eventbus
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -13,6 +15,7 @@ type SNSEventService struct {
 	ch         chan Event
 	eventType  string
 	client     *http.Client
+	snsClient  SNSPublishAPI
 	topic      string // AWS ARN
 	cancelFunc context.CancelFunc
 }
@@ -33,9 +36,7 @@ func (s *SNSEventService) Run() {
 	var ctx context.Context
 	ctx, s.cancelFunc = context.WithCancel(context.TODO()) // This is for canceling go routine. TODO is enough
 
-	client := s.createSNSClient()
-
-	go func(c context.Context, client SNSPublishAPI, topicArn string) {
+	go func(c context.Context, api SNSPublishAPI, topicArn string) {
 		for {
 			select {
 			case <-ctx.Done():
@@ -46,15 +47,15 @@ func (s *SNSEventService) Run() {
 					TopicArn: &topicArn,
 				}
 
-				_, err := PublishMessage(event.Ctx, client, input) // _ (result), might be useful in some case
+				_, err := PublishMessage(event.Ctx, api, input) // _ (result), might be useful in some case
 				if err != nil {
-					fmt.Println("Got an error publishing the message:")
-					fmt.Println(err)
+					log.Println("Got an error publishing the message:")
+					log.Println(err)
 					return
 				}
 			}
 		}
-	}(ctx, client, s.topic)
+	}(ctx, s.snsClient, s.topic)
 }
 
 func (s *SNSEventService) Stop() {
@@ -64,12 +65,12 @@ func (s *SNSEventService) Stop() {
 	s.cancelFunc()
 }
 
-const DefaultEventType string = "SNSEvent"
+const DefaultSNSServiceEventType string = "SNSEvent"
 
 func CreateSNSEventService(options ...SNSOption) (*SNSEventService, error) {
 	svc := &SNSEventService{
 		ch:        make(chan Event),
-		eventType: DefaultEventType,
+		eventType: DefaultSNSServiceEventType,
 		client:    http.DefaultClient,
 	}
 
@@ -81,18 +82,22 @@ func CreateSNSEventService(options ...SNSOption) (*SNSEventService, error) {
 		option(svc)
 	}
 
+	svc.createSNSClient()
+
 	return svc, nil
 }
 
-func (svc *SNSEventService) createSNSClient() *sns.Client {
+func (svc *SNSEventService) createSNSClient() {
 	cfg, err := config.LoadDefaultConfig(context.Background(), config.WithHTTPClient(svc.client))
 	if err != nil {
 		panic("configuration error, " + err.Error())
 	}
 
-	client := sns.NewFromConfig(cfg)
-	return client
+	svc.snsClient = sns.NewFromConfig(cfg)
+
 }
+
+// Below is from AWS-go-sdk-v2 example
 
 // SNSPublishAPI defines the interface for the Publish function.
 // We use this interface to test the function using a mocked service.
@@ -109,5 +114,8 @@ type SNSPublishAPI interface {
 //     If success, a PublishOutput object containing the result of the service call and nil
 //     Otherwise, nil and an error from the call to Publish
 func PublishMessage(c context.Context, api SNSPublishAPI, input *sns.PublishInput) (*sns.PublishOutput, error) {
+	if api == nil {
+		return nil, errors.New("No SNS Client")
+	}
 	return api.Publish(c, input)
 }

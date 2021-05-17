@@ -2,7 +2,6 @@ package eventbus
 
 import (
 	"context"
-	"fmt"
 	"log"
 )
 
@@ -22,7 +21,7 @@ func (s *ExampleEventService) GetEventType() string {
 
 func (s *ExampleEventService) Run() {
 	if s.cancelFunc != nil {
-		fmt.Println("cancel first")
+		log.Println("cancel first")
 		return
 	}
 	var ctx context.Context
