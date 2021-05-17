@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	// Application config layer
 	fmt.Println("abc")
 	eb := &EventDispatcher{
 		EventChan: make(map[string]EventService),
@@ -23,6 +24,7 @@ func main() {
 		return
 	}
 
+	// Service layer
 	event := &Event{
 		Data:      "abc",
 		EventType: DefaultExampleEventType,
@@ -33,5 +35,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+
+	eb.Unregistor(DefaultExampleEventType)
 
 }

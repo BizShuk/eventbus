@@ -3,6 +3,7 @@ package eventbus
 import (
 	"context"
 	"fmt"
+	"log"
 )
 
 type ExampleEventService struct {
@@ -31,9 +32,10 @@ func (s *ExampleEventService) Run() {
 		for {
 			select {
 			case <-ctx.Done():
+				log.Println("ExampleService goroutine exits")
 				return
 			case event := <-s.GetChannel():
-				fmt.Println(event)
+				log.Printf("event received from channel %v", event)
 			}
 		}
 	}(ctx)
@@ -44,6 +46,8 @@ func (s *ExampleEventService) Stop() {
 		return
 	}
 	s.cancelFunc()
+
+	log.Println("Called CancelFunc")
 }
 
 const DefaultExampleEventType string = "ExampleEvent"
